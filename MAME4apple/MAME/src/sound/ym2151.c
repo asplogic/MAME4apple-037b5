@@ -2,9 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <setjmp.h>
 #include "driver.h"
 #include "ym2151.h"
 
+static jmp_buf s_jumpBuffer;
 
 /*undef this to not use MAME timer system*/
 #define USE_MAME_TIMERS
@@ -1552,23 +1554,27 @@ signed int mod_ind, pom;
 	if (mod_ind)
 	{
 		unsigned int kc_channel;
+        
+        if (setjmp(s_jumpBuffer)) {
+        
+            kc_channel = op->KCindex + mod_ind;
 
-		kc_channel = op->KCindex + mod_ind;
+            pom = ( (PSG->freq[ kc_channel + op->DT2 ] + op->DT1v) * op->MUL ) >> 1;
+            op->phase += (pom - op->freq);
 
-		pom = ( (PSG->freq[ kc_channel + op->DT2 ] + op->DT1v) * op->MUL ) >> 1;
-		op->phase += (pom - op->freq);
+            op+=8;
+            pom = ( (PSG->freq[ kc_channel + op->DT2 ] + op->DT1v) * op->MUL ) >> 1;
+            op->phase += (pom - op->freq);
 
-		op+=8;
-		pom = ( (PSG->freq[ kc_channel + op->DT2 ] + op->DT1v) * op->MUL ) >> 1;
-		op->phase += (pom - op->freq);
+            op+=8;
+            pom = ( (PSG->freq[ kc_channel + op->DT2 ] + op->DT1v) * op->MUL ) >> 1;
+            op->phase += (pom - op->freq);
 
-		op+=8;
-		pom = ( (PSG->freq[ kc_channel + op->DT2 ] + op->DT1v) * op->MUL ) >> 1;
-		op->phase += (pom - op->freq);
+            op+=8;
+            pom = ( (PSG->freq[ kc_channel + op->DT2 ] + op->DT1v) * op->MUL ) >> 1;
+            op->phase += (pom - op->freq);
+        }
 
-		op+=8;
-		pom = ( (PSG->freq[ kc_channel + op->DT2 ] + op->DT1v) * op->MUL ) >> 1;
-		op->phase += (pom - op->freq);
 	}
 }
 
