@@ -104,6 +104,10 @@ int sortMethod;
 
 GameScene *myObjectSelf;
 
+BOOL FIRST_TIME = YES;
+const CGFloat onscreenJoystickLeftAnchorX = -90.499992;
+const CGFloat onscreenJoystickLeftAnchorY = -176.500000;
+
 @implementation GameScene
 {
 }
@@ -529,8 +533,8 @@ extern const char *getROMpath();
 {
 #if USE_TOUCH_CONTROLS
     // left side joystick
-    onscreenJoystickLeftAnchor = CGPointMake(-256, -256);
-    onscreenJoystickLeft = [SKShapeNode shapeNodeWithCircleOfRadius:64];
+    onscreenJoystickLeftAnchor = CGPointMake(onscreenJoystickLeftAnchorX, onscreenJoystickLeftAnchorY);
+    onscreenJoystickLeft = [SKShapeNode shapeNodeWithCircleOfRadius:80];
     onscreenJoystickLeft.name = @"joystickleft";
     onscreenJoystickLeft.position = onscreenJoystickLeftAnchor;
     onscreenJoystickLeft.fillColor = [UIColor darkGrayColor];
@@ -540,8 +544,9 @@ extern const char *getROMpath();
     onscreenNubLeft = [SKShapeNode shapeNodeWithCircleOfRadius:32];
     onscreenNubLeft.name = @"nubleft";
     onscreenNubLeft.fillColor = [UIColor redColor];
+    onscreenNubLeft.position = CGPointZero;
     [onscreenJoystickLeft addChild:onscreenNubLeft];
-    
+
     onscreenJoystickLeft.hidden = YES;
 #endif
 }
@@ -645,7 +650,7 @@ BOOL iCadeDetected;
         case iCadeButtonH:
             iCadeButtonState[ICADEBUTTON_H] = state;
             break;
-            
+        /*    
         case iCadeJoystickUp:
             if (state) {
                 center.y -= offset;
@@ -674,7 +679,7 @@ BOOL iCadeDetected;
                 center.x += offset;
             }
             break;
-            
+        */
         default:
             break;
     }
@@ -914,9 +919,6 @@ CGPoint CGPointClamp(CGPoint p, float range)
 #if USE_TOUCH_CONTROLS
     if (touchPos.x < 0)
     {
-        onscreenJoystickLeftAnchor = touchPos;
-        onscreenJoystickLeft.position = touchPos;
-        onscreenNubLeft.position = CGPointZero;
         onscreenJoystickLeft.hidden = NO;
     }
 #endif
@@ -928,7 +930,7 @@ CGPoint CGPointClamp(CGPoint p, float range)
     if (touchPos.x < 0)
     {
         CGPoint offset = CGPointMake(touchPos.x - onscreenJoystickLeftAnchor.x, touchPos.y - onscreenJoystickLeftAnchor.y);
-        offset = CGPointClamp(offset, 64);
+        offset = CGPointClamp(offset, 40);
         onscreenNubLeft.position = offset;
         touchInputX = offset.x / 8.0f;
         touchInputY = offset.y / 8.0f;
@@ -941,7 +943,8 @@ CGPoint CGPointClamp(CGPoint p, float range)
 #if USE_TOUCH_CONTROLS
     if (touchPos.x < 0)
     {
-        onscreenJoystickLeft.hidden = YES;
+        // onscreenJoystickLeft.hidden = YES;
+        onscreenNubLeft.position = CGPointZero;
     }
 #endif
 }
@@ -1042,6 +1045,9 @@ CGPoint startTouchPos;
         if (touchTapCount > 0)
         {
             [self touchTapAtPoint:[t locationInNode:self]];
+        }
+        else {
+            onscreenNubLeft.position = CGPointZero;
         }
 #endif
     }
