@@ -731,8 +731,8 @@ UINT32 gameScreenHeight;
 
 -(void)initFrameBuffer
 {
-    UINT32 bufferWidth = 1024;
-    UINT32 bufferHeight = 1024;
+    UINT32 bufferWidth = 11264;
+    UINT32 bufferHeight = 11246;
     
     screen = (bitmap_t *)malloc(sizeof(bitmap_t));
     screen->bitmap = osd_alloc_bitmap(bufferWidth, bufferHeight, 32);
