@@ -37,7 +37,7 @@ int game_bitmap_update;
 int runState = 0; // 0 = front-end, 1 = launch game
 int game_index = 0; // currently selected game
 
-#define MAX_GAME_LIST 50
+#define MAX_GAME_LIST 150
 int gameListCount;
 SKLabelNode *gameList[MAX_GAME_LIST];
 SKLabelNode *gameListDesc[MAX_GAME_LIST];
@@ -58,10 +58,13 @@ UIButton *buttonAction1;
 UIButton *buttonAction2;
 UIButton *buttonAction3;
 UIButton *buttonAction4;
+UIButton *buttonAction5;
+UIButton *buttonAction6;
 int actionButtonY[4] = {300, 400, 500, 600};
 // onscreen joystick
 SKShapeNode *onscreenJoystickLeft;
-SKShapeNode *onscreenNubLeft;
+// SKShapeNode 
+SKSpriteNode *onscreenNubLeft;
 CGPoint onscreenJoystickLeftAnchor;
 #endif
 
@@ -103,6 +106,8 @@ SKLabelNode *gameCountLabel;
 int sortMethod;
 
 GameScene *myObjectSelf;
+
+const CGFloat onscreenJoystickLeftRadius = 70;
 
 @implementation GameScene
 {
@@ -305,16 +310,47 @@ NSMutableArray *sectionIndexArray;
     onscreenButton[3] = 0;
 }
 
--(UIButton *)createButton:(NSString *)title
+-(void)action5ButtonPressed
+{
+    onscreenButton[4] = 1;
+}
+
+-(void)action5ButtonReleased
+{
+    onscreenButton[4] = 0;
+}
+
+-(void)action6ButtonPressed
+{
+    onscreenButton[5] = 1;
+}
+
+-(void)action6ButtonReleased
+{
+    onscreenButton[5] = 0;
+}
+
+-(UIButton *)createButton:(NSString *)title withImage:(NSString *)image opacity:(CGFloat)opacity
 {
     UIButton *button = [UIButton buttonWithType:UIButtonTypeRoundedRect];
-    [button setTitle:title forState:UIControlStateNormal];
-    [button setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-    [button setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
-    [button setBackgroundColor:[UIColor darkGrayColor]];
-    [button setAlpha:0.5f];
-    [[button layer] setBorderWidth:2];
-    [[button layer] setBorderColor:[UIColor whiteColor].CGColor];
+    [button setAlpha:opacity];
+    
+    if (!title) {
+        UIImage *btnImageOff = [UIImage imageNamed:image];
+        [button setBackgroundImage:btnImageOff forState:UIControlStateNormal];
+        button.contentHorizontalAlignment = UIControlContentHorizontalAlignmentFill;
+        button.contentVerticalAlignment = UIControlContentVerticalAlignmentFill;
+        button.imageView.contentMode = UIViewContentModeScaleAspectFit;
+    }
+    else {
+        [button setTitle:title forState:UIControlStateNormal];
+        [button setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+        [button setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
+        [button setBackgroundColor:[UIColor darkGrayColor]];
+        [[button layer] setBorderWidth:2];
+        [[button layer] setBorderColor:[UIColor whiteColor].CGColor];
+    }
+    
     return button;
 }
 #endif
@@ -529,19 +565,37 @@ extern const char *getROMpath();
 {
 #if USE_TOUCH_CONTROLS
     // left side joystick
-    onscreenJoystickLeftAnchor = CGPointMake(-256, -256);
-    onscreenJoystickLeft = [SKShapeNode shapeNodeWithCircleOfRadius:64];
+    NSLog(@">>>> initOnScreenJoystick: %f, %f:", viewSize.width, viewSize.height);
+    // 375.000000, 667.000000:
+
+    
+    if (viewSize.width > viewSize.height) {
+        
+    }
+
+    onscreenJoystickLeftAnchor = CGPointMake((onscreenJoystickLeftRadius+15)-(viewSize.width / 2), (onscreenJoystickLeftRadius+15) - (viewSize.height/2));    
+    onscreenJoystickLeft = [SKShapeNode shapeNodeWithCircleOfRadius:onscreenJoystickLeftRadius];
     onscreenJoystickLeft.name = @"joystickleft";
     onscreenJoystickLeft.position = onscreenJoystickLeftAnchor;
-    onscreenJoystickLeft.fillColor = [UIColor darkGrayColor];
-    onscreenJoystickLeft.alpha = 0.2f;
+    // onscreenJoystickLeft.fillColor = [UIColor darkGrayColor];
+    onscreenJoystickLeft.strokeColor = [SKColor lightGrayColor];
+    onscreenJoystickLeft.glowWidth = 0.5;
+    onscreenJoystickLeft.alpha = 0.8f;
     [self addChild:onscreenJoystickLeft];
-    
-    onscreenNubLeft = [SKShapeNode shapeNodeWithCircleOfRadius:32];
+
+    // SKTexture* knobTexture = [SKTexture textureWithImageNamed:@"white-knob"];
+    // knobTexture.filteringMode = SKTextureFilteringNearest;
+
+    //onscreenNubLeft = [SKShapeNode shapeNodeWithCircleOfRadius:32];
+    // http://freebiesbug.com/psd-freebies/analog-joystick/
+    // https://dribbble.com/shots/771063-Power-Button
+    // https://dribbble.com/shots/968408-Joystick-and-Knob
+
+    onscreenNubLeft = [SKSpriteNode spriteNodeWithImageNamed:@"knob-dark.png"];
     onscreenNubLeft.name = @"nubleft";
-    onscreenNubLeft.fillColor = [UIColor redColor];
+    onscreenNubLeft.position = CGPointZero;
     [onscreenJoystickLeft addChild:onscreenNubLeft];
-    
+
     onscreenJoystickLeft.hidden = YES;
 #endif
 }
@@ -552,59 +606,80 @@ extern const char *getROMpath();
     int buttonWidth = 100;
     int buttonHeight = 90;
     int buttonHeight2 = 50;
+    int buttonSeparator = 5;
+    
     
     if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPhone)
     {
-        buttonWidth = 50;
-        buttonHeight = 50;
-        buttonHeight2 = 50;
+        buttonWidth = 70;
+        buttonHeight = 70;
+        buttonHeight2 = 70;
         actionButtonY[0] = 50;
         actionButtonY[1] = 110;
         actionButtonY[2] = 170;
-        actionButtonY[3] = 230;
+        actionButtonY[3] = 200;
+    }
+
+    if (viewSize.width > viewSize.height) {
+        buttonSeparator = 15;
+        actionButtonY[3] -= 30;
     }
     
-    buttonCoin = [self createButton:@"COIN"];
+    buttonCoin = [self createButton:nil withImage:@"button-coin.png" opacity:0.2f];
     [buttonCoin addTarget:self action:@selector(coinButtonPressed) forControlEvents:UIControlEventTouchDown];
     [buttonCoin addTarget:self action:@selector(coinButtonReleased) forControlEvents:UIControlEventTouchUpInside];
-    buttonCoin.frame = CGRectMake(0, 10, buttonWidth, buttonHeight2);
+    buttonCoin.frame = CGRectMake(10, 15, 56, buttonHeight2);
     [self.view addSubview:buttonCoin];
     
-    buttonStart = [self createButton:@"START"];
+    buttonStart = [self createButton:nil withImage:@"button-player1.png" opacity:0.2f];
     [buttonStart addTarget:self action:@selector(startButtonPressed) forControlEvents:UIControlEventTouchDown];
     [buttonStart addTarget:self action:@selector(startButtonReleased) forControlEvents:UIControlEventTouchUpInside];
-    buttonStart.frame = CGRectMake(viewSize.width - buttonWidth, 10, buttonWidth, buttonHeight2);
+    buttonStart.frame = CGRectMake(viewSize.width - buttonWidth - 10, 15, buttonWidth, buttonHeight2);
     [self.view addSubview:buttonStart];
     
-    buttonExit = [self createButton:@"EXIT"];
+    buttonExit = [self createButton:@"EXIT" withImage:nil opacity:0.2f];
     [buttonExit addTarget:self action:@selector(exitButtonPressed) forControlEvents:UIControlEventTouchDown];
     [buttonExit addTarget:self action:@selector(exitButtonReleased) forControlEvents:UIControlEventTouchUpInside];
-    buttonExit.frame = CGRectMake(0, viewSize.height - (buttonHeight2 + 10), buttonWidth, buttonHeight2);
+    buttonExit.frame = CGRectMake(viewSize.width / 2 - (buttonWidth  / 2), 15, buttonWidth, buttonHeight2);
     [self.view addSubview:buttonExit];
+
     
-    buttonAction1 = [self createButton:@"BUTTON1"];
+    buttonAction1 = [self createButton:nil withImage:@"button-red.png" opacity:0.5f];
     [buttonAction1 addTarget:self action:@selector(action1ButtonPressed) forControlEvents:UIControlEventTouchDown];
     [buttonAction1 addTarget:self action:@selector(action1ButtonReleased) forControlEvents:UIControlEventTouchUpInside];
-    buttonAction1.frame = CGRectMake(viewSize.width - buttonWidth, viewSize.height - actionButtonY[0], buttonWidth, buttonHeight);
+    buttonAction1.frame = CGRectMake(viewSize.width - (3 * (buttonWidth+buttonSeparator)), viewSize.height - actionButtonY[3], buttonWidth, buttonHeight);
     [self.view addSubview:buttonAction1];
     
-    buttonAction2 = [self createButton:@"BUTTON2"];
+    buttonAction2 = [self createButton:nil withImage:@"button-red.png" opacity:0.5f];
     [buttonAction2 addTarget:self action:@selector(action2ButtonPressed) forControlEvents:UIControlEventTouchDown];
     [buttonAction2 addTarget:self action:@selector(action2ButtonReleased) forControlEvents:UIControlEventTouchUpInside];
-    buttonAction2.frame = CGRectMake(viewSize.width - buttonWidth, viewSize.height - actionButtonY[1], buttonWidth, buttonHeight);
+    buttonAction2.frame = CGRectMake(viewSize.width - (2 * (buttonWidth+buttonSeparator)), viewSize.height - actionButtonY[3], buttonWidth, buttonHeight);
     [self.view addSubview:buttonAction2];
-    
-    buttonAction3 = [self createButton:@"BUTTON3"];
+
+    buttonAction3 = [self createButton:nil withImage:@"button-red.png" opacity:0.5f];
     [buttonAction3 addTarget:self action:@selector(action3ButtonPressed) forControlEvents:UIControlEventTouchDown];
     [buttonAction3 addTarget:self action:@selector(action3ButtonReleased) forControlEvents:UIControlEventTouchUpInside];
-    buttonAction3.frame = CGRectMake(viewSize.width - buttonWidth, viewSize.height - actionButtonY[2], buttonWidth, buttonHeight);
+    buttonAction3.frame = CGRectMake(viewSize.width - (buttonWidth+buttonSeparator), viewSize.height - actionButtonY[3], buttonWidth, buttonHeight);
     [self.view addSubview:buttonAction3];
     
-    buttonAction4 = [self createButton:@"BUTTON4"];
+
+    buttonAction4 = [self createButton:nil withImage:@"button-white.png" opacity:0.5f];
     [buttonAction4 addTarget:self action:@selector(action4ButtonPressed) forControlEvents:UIControlEventTouchDown];
     [buttonAction4 addTarget:self action:@selector(action4ButtonReleased) forControlEvents:UIControlEventTouchUpInside];
-    buttonAction4.frame = CGRectMake(viewSize.width - buttonWidth, viewSize.height - actionButtonY[3], buttonWidth, buttonHeight);
+    buttonAction4.frame = CGRectMake(viewSize.width - (3 * (buttonWidth+buttonSeparator)), (buttonHeight + buttonSeparator + viewSize.height) - actionButtonY[3], buttonWidth, buttonHeight);
     [self.view addSubview:buttonAction4];
+    
+    buttonAction5 = [self createButton:nil withImage:@"button-white.png" opacity:0.5f];
+    [buttonAction5 addTarget:self action:@selector(action5ButtonPressed) forControlEvents:UIControlEventTouchDown];
+    [buttonAction5 addTarget:self action:@selector(action5ButtonReleased) forControlEvents:UIControlEventTouchUpInside];
+    buttonAction5.frame = CGRectMake(viewSize.width - (2 * (buttonWidth+buttonSeparator)), (buttonHeight + buttonSeparator + viewSize.height) - actionButtonY[3], buttonWidth, buttonHeight);
+    [self.view addSubview:buttonAction5];
+
+    buttonAction6 = [self createButton:nil withImage:@"button-white.png" opacity:0.5f];
+    [buttonAction6 addTarget:self action:@selector(action6ButtonPressed) forControlEvents:UIControlEventTouchDown];
+    [buttonAction6 addTarget:self action:@selector(action6ButtonReleased) forControlEvents:UIControlEventTouchUpInside];
+    buttonAction6.frame = CGRectMake(viewSize.width - (buttonWidth+buttonSeparator), (buttonHeight + buttonSeparator + viewSize.height) - actionButtonY[3], buttonWidth, buttonHeight);
+    [self.view addSubview:buttonAction6];
     
     [self handleOnscreenButtonsEnable:NO];
 #endif
@@ -645,7 +720,7 @@ BOOL iCadeDetected;
         case iCadeButtonH:
             iCadeButtonState[ICADEBUTTON_H] = state;
             break;
-            
+        /*    
         case iCadeJoystickUp:
             if (state) {
                 center.y -= offset;
@@ -674,7 +749,7 @@ BOOL iCadeDetected;
                 center.x += offset;
             }
             break;
-            
+        */
         default:
             break;
     }
@@ -731,8 +806,8 @@ UINT32 gameScreenHeight;
 
 -(void)initFrameBuffer
 {
-    UINT32 bufferWidth = 1024;
-    UINT32 bufferHeight = 1024;
+    UINT32 bufferWidth = 11264;
+    UINT32 bufferHeight = 11246;
     
     screen = (bitmap_t *)malloc(sizeof(bitmap_t));
     screen->bitmap = osd_alloc_bitmap(bufferWidth, bufferHeight, 32);
@@ -869,23 +944,40 @@ void fillBufferData(UINT32 *buf, int width, int height)
     int buttonWidth = 100;
     int buttonHeight = 90;
     int buttonHeight2 = 50;
+    int buttonSeparator = 5;
+
     if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPhone)
     {
-        buttonWidth = 50;
-        buttonHeight = 50;
-        buttonHeight2 = 50;
+        buttonWidth = 70;
+        buttonHeight = 70;
+        buttonHeight2 = 70;
         actionButtonY[0] = 50;
         actionButtonY[1] = 110;
         actionButtonY[2] = 170;
-        actionButtonY[3] = 230;
+        actionButtonY[3] = 200;
     }
-    buttonCoin.frame = CGRectMake(0, 10, buttonWidth, buttonHeight2);
-    buttonStart.frame = CGRectMake(viewSize.width - buttonWidth, 10, buttonWidth, buttonHeight2);
-    buttonExit.frame = CGRectMake(0, viewSize.height - (buttonHeight2 + 10), buttonWidth, buttonHeight2);
-    buttonAction1.frame = CGRectMake(viewSize.width - buttonWidth, viewSize.height - actionButtonY[0], buttonWidth, buttonHeight);
-    buttonAction2.frame = CGRectMake(viewSize.width - buttonWidth, viewSize.height - actionButtonY[1], buttonWidth, buttonHeight);
-    buttonAction3.frame = CGRectMake(viewSize.width - buttonWidth, viewSize.height - actionButtonY[2], buttonWidth, buttonHeight);
-    buttonAction4.frame = CGRectMake(viewSize.width - buttonWidth, viewSize.height - actionButtonY[3], buttonWidth, buttonHeight);
+
+    if (viewSize.width > viewSize.height) {
+        buttonSeparator = 15;
+        actionButtonY[3] -= 30;
+    }
+
+    NSLog(@">>>>>> HERE HERE: %f, %f ===== %f, %f", viewSize.width, viewSize.height, width, height);
+
+    onscreenJoystickLeftAnchor = CGPointMake((onscreenJoystickLeftRadius+15)-(viewSize.width / 2), (onscreenJoystickLeftRadius+15) - (viewSize.height/2));
+    onscreenJoystickLeft.position = onscreenJoystickLeftAnchor;
+    onscreenNubLeft.position = CGPointZero;
+
+    buttonCoin.frame = CGRectMake(10, 15, 56, buttonHeight2);
+    buttonStart.frame = CGRectMake(viewSize.width - buttonWidth - 10, 15, buttonWidth, buttonHeight2);
+    buttonExit.frame = CGRectMake(viewSize.width / 2 - (buttonWidth  / 2), 15, buttonWidth, buttonHeight2);
+
+    buttonAction1.frame = CGRectMake(viewSize.width - (3 * (buttonWidth+buttonSeparator)), viewSize.height - actionButtonY[3], buttonWidth, buttonHeight);
+    buttonAction2.frame = CGRectMake(viewSize.width - (2 * (buttonWidth+buttonSeparator)), viewSize.height - actionButtonY[3], buttonWidth, buttonHeight);
+    buttonAction3.frame = CGRectMake(viewSize.width - (buttonWidth+buttonSeparator), viewSize.height - actionButtonY[3], buttonWidth, buttonHeight);
+    buttonAction4.frame = CGRectMake(viewSize.width - (3 * (buttonWidth+buttonSeparator)), (buttonHeight + buttonSeparator + viewSize.height) - actionButtonY[3], buttonWidth, buttonHeight);
+    buttonAction5.frame = CGRectMake(viewSize.width - (2 * (buttonWidth+buttonSeparator)), (buttonHeight + buttonSeparator + viewSize.height) - actionButtonY[3], buttonWidth, buttonHeight);
+    buttonAction6.frame = CGRectMake(viewSize.width - (buttonWidth+buttonSeparator), (buttonHeight + buttonSeparator + viewSize.height) - actionButtonY[3], buttonWidth, buttonHeight);
 #endif
     
 #if !USE_TABLEVIEW
@@ -914,9 +1006,6 @@ CGPoint CGPointClamp(CGPoint p, float range)
 #if USE_TOUCH_CONTROLS
     if (touchPos.x < 0)
     {
-        onscreenJoystickLeftAnchor = touchPos;
-        onscreenJoystickLeft.position = touchPos;
-        onscreenNubLeft.position = CGPointZero;
         onscreenJoystickLeft.hidden = NO;
     }
 #endif
@@ -925,10 +1014,11 @@ CGPoint CGPointClamp(CGPoint p, float range)
 -(void)handleOnscreenJoystickMove:(CGPoint)touchPos
 {
 #if USE_TOUCH_CONTROLS
-    if (touchPos.x < 0)
+    if (touchPos.x < 0 && touchPos.y < (onscreenJoystickLeftAnchor.y + 100))
     {
         CGPoint offset = CGPointMake(touchPos.x - onscreenJoystickLeftAnchor.x, touchPos.y - onscreenJoystickLeftAnchor.y);
-        offset = CGPointClamp(offset, 64);
+        offset = CGPointClamp(offset, 40);
+        onscreenNubLeft.texture = [SKTexture textureWithImageNamed:@"knob-dark"];
         onscreenNubLeft.position = offset;
         touchInputX = offset.x / 8.0f;
         touchInputY = offset.y / 8.0f;
@@ -941,7 +1031,9 @@ CGPoint CGPointClamp(CGPoint p, float range)
 #if USE_TOUCH_CONTROLS
     if (touchPos.x < 0)
     {
-        onscreenJoystickLeft.hidden = YES;
+        // onscreenJoystickLeft.hidden = YES;
+        onscreenNubLeft.position = CGPointZero;
+        onscreenNubLeft.texture = [SKTexture textureWithImageNamed:@"knob-dark"];
     }
 #endif
 }
@@ -983,6 +1075,8 @@ void OnScreenButtonsEnable(BOOL on)
         [buttonAction2 setHidden:hidden];
         [buttonAction3 setHidden:hidden];
         [buttonAction4 setHidden:hidden];
+        [buttonAction5 setHidden:hidden];
+        [buttonAction6 setHidden:hidden];   
     }
     buttonState = on;
 #endif
@@ -1042,6 +1136,9 @@ CGPoint startTouchPos;
         if (touchTapCount > 0)
         {
             [self touchTapAtPoint:[t locationInNode:self]];
+        }
+        else {
+            onscreenNubLeft.position = CGPointZero;
         }
 #endif
     }

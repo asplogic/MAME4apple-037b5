@@ -909,7 +909,7 @@ void parse_cmdline (int argc, char **argv, int game_index, char *override_defaul
     
     //soundcard = get_int("config", "soundcard",  NULL, -1);
     options.use_emulated_ym3812 = !get_bool("config", "ym3812opl", NULL, 0);
-    options.samplerate = get_int("config", "samplerate", "sr", 22050);
+    options.samplerate = get_int("config", "samplerate", "sr", 22050);// 22050);
 
     artworkdir = get_iOS_directory("artwork"); //pre-existing
     

@@ -198,6 +198,8 @@ const struct KeyboardInfo *osd_get_key_list(void)
 // button2 = KEYCODE_LALT
 // button3 = KEYCODE_SPACE
 // button4 = KEYCODE_LSHIFT
+// button5 = KEYCODE_Z
+// button6 = KEYCODE_X
 // player 2:
 // up = KEYCODE_R
 // down = KEYCODE_M
@@ -207,7 +209,9 @@ const struct KeyboardInfo *osd_get_key_list(void)
 // button2 = KEYCODE_T
 // button3 = KEYCODE_Q
 // button4 = KEYCODE_W
-//
+// button5 = JOYCODE_2_BUTTON5
+// button6 = JOYCODE_2_BUTTON6
+
 void button_up_pressed(int playerNum)
 {
     if (playerNum == 0)
@@ -306,6 +310,30 @@ void button_4_pressed(int playerNum)
     else if (playerNum == 1)
     {
         key[KEY_W] = 1;
+    }
+}
+
+void button_5_pressed(int playerNum)
+{
+    if (playerNum == 0)
+    {
+        key[KEY_Z] = 1;
+    }
+    else if (playerNum == 1)
+    {
+        key[KEY_O] = 1;
+    }
+}
+
+void button_6_pressed(int playerNum)
+{
+    if (playerNum == 0)
+    {
+        key[KEY_X] = 1;
+    }
+    else if (playerNum == 1)
+    {
+        key[KEY_P] = 1;
     }
 }
 
@@ -454,6 +482,14 @@ void update_key_array()
     if (iCadeButtonState[ICADEBUTTON_B] || onscreenButton[ONSCREEN_BUTTON_D] != 0)
     {
         button_4_pressed(0);
+    }
+    if (iCadeButtonState[ICADEBUTTON_D] || onscreenButton[ONSCREEN_BUTTON_E] != 0)
+    {
+        button_5_pressed(0);
+    }
+    if (iCadeButtonState[ICADEBUTTON_F] || onscreenButton[ONSCREEN_BUTTON_F] != 0)
+    {
+        button_6_pressed(0);
     }
     if (iCadeButtonState[ICADEBUTTON_G])
     {
